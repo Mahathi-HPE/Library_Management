@@ -29,16 +29,16 @@ class AuthController extends Controller
     {
         $username = trim($_POST['username'] ?? '');
         $password = trim($_POST['password'] ?? '');
-        $role = trim($_POST['role'] ?? '');
 
-        if (!$username || !$password || !in_array($role, ['User', 'Admin'], true)) {
+        if (!$username || !$password) {
             $this->loginError('Please fill all login fields.');
         }
 
-        $dbUser = (new User())->findByUsernameAndRole($username, $role);
+        $dbUser = (new User())->findByUsernameWithRole($username);
         $isValid = $dbUser && (password_verify($password, $dbUser['Password']) || hash_equals($dbUser['Password'], $password));
+        $role = $dbUser['RName'] ?? '';
 
-        if (!$dbUser || !$isValid || $dbUser['RName'] !== $role) {
+        if (!$dbUser || !$isValid || !in_array($role, ['User', 'Admin'], true)) {
             $this->loginError('Invalid credentials.');
         }
 

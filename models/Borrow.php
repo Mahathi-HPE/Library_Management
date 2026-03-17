@@ -212,7 +212,7 @@ class Borrow extends Model
             'SELECT br.BorrowId, br.Bid, br.BorrowStatus AS Status, b.Title
              FROM Borrows br
              INNER JOIN Books b ON b.Bid = br.Bid
-             WHERE br.Mid = :mid AND br.Cid IS NULL AND br.BorrowStatus IS NOT NULL
+             WHERE br.Mid = :mid AND br.BorrowStatus IS NOT NULL
              ORDER BY br.BorrowId DESC'
         );
         $stmt->execute([':mid' => $mid]);

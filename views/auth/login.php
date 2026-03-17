@@ -20,13 +20,6 @@
                         <label class="form-label">Password</label>
                         <input type="password" name="password" class="form-control" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Login As</label>
-                        <select name="role" class="form-select" required>
-                            <option value="User">Member</option>
-                            <option value="Admin">Admin</option>
-                        </select>
-                    </div>
                     <button class="btn btn-primary w-100" type="submit">Login</button>
                 </form>
 

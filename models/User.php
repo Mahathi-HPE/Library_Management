@@ -3,6 +3,21 @@ declare(strict_types=1);
 
 class User extends Model
 {
+    public function findByUsernameWithRole(string $username): ?array
+    {
+        return $this->fetchOne(
+            'SELECT u.Uid, u.Username, u.Password, r.RName
+             FROM Users u
+             INNER JOIN UserRole ur ON ur.Uid = u.Uid
+             INNER JOIN Roles r ON r.Rid = ur.Rid
+             WHERE u.Username = :username
+             LIMIT 1',
+            [
+            ':username' => $username,
+            ]
+        );
+    }
+
     public function findByUsernameAndRole(string $username, string $role): ?array
     {
         return $this->fetchOne(
