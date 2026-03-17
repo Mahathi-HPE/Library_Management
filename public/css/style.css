@@ -1,0 +1,7 @@
+body {
+    min-height: 100vh;
+}
+
+.list-group-item.active {
+    font-weight: 600;
+}
