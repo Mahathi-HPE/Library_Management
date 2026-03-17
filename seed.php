@@ -29,6 +29,18 @@ $ensureLink = static function (PDO $db, string $table, string $left, int $leftId
     }
 };
 
+$columnExists = static function (PDO $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+    $stmt->execute([$table, $column]);
+    return (int) $stmt->fetchColumn() > 0;
+};
+
+$tableExists = static function (PDO $db, string $table): bool {
+    $stmt = $db->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?");
+    $stmt->execute([$table]);
+    return (int) $stmt->fetchColumn() > 0;
+};
+
 try {
     $db->beginTransaction();
 
@@ -39,6 +51,44 @@ try {
         FOREIGN KEY (Uid) REFERENCES Users(Uid) ON DELETE CASCADE,
         FOREIGN KEY (Mid) REFERENCES Members(Mid) ON DELETE CASCADE
     )');
+
+    if (!$columnExists($db, 'Borrows', 'BorrowId')) {
+        $db->exec('ALTER TABLE Borrows DROP PRIMARY KEY');
+        $db->exec('ALTER TABLE Borrows ADD COLUMN BorrowId INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST');
+    }
+
+    if (!$columnExists($db, 'Borrows', 'Bid')) {
+        $db->exec('ALTER TABLE Borrows ADD COLUMN Bid INT NULL AFTER Mid');
+    }
+    if (!$columnExists($db, 'Borrows', 'BorrowStatus')) {
+        $db->exec('ALTER TABLE Borrows ADD COLUMN BorrowStatus ENUM("Pending", "Approved", "Rejected") NULL AFTER Bdate');
+    }
+    if (!$columnExists($db, 'Borrows', 'ReturnStatus')) {
+        $db->exec('ALTER TABLE Borrows ADD COLUMN ReturnStatus ENUM("Not Returned", "Pending", "Approved") DEFAULT "Not Returned"');
+    }
+
+    if ($columnExists($db, 'Borrows', 'Quantity')) {
+        $db->exec('ALTER TABLE Borrows DROP COLUMN Quantity');
+    }
+    if ($columnExists($db, 'Borrows', 'RequestDate')) {
+        $db->exec('ALTER TABLE Borrows DROP COLUMN RequestDate');
+    }
+    if ($columnExists($db, 'Borrows', 'ProcessedDate')) {
+        $db->exec('ALTER TABLE Borrows DROP COLUMN ProcessedDate');
+    }
+    if ($columnExists($db, 'Borrows', 'ReturnRequestDate')) {
+        $db->exec('ALTER TABLE Borrows DROP COLUMN ReturnRequestDate');
+    }
+    if ($columnExists($db, 'Borrows', 'ReturnedDate')) {
+        $db->exec('ALTER TABLE Borrows DROP COLUMN ReturnedDate');
+    }
+
+    if ($tableExists($db, 'BorrowRequests')) {
+        $db->exec('INSERT INTO Borrows (Cid, Mid, Bid, Bdate, BorrowStatus, Fine, FineStatus, ReturnStatus)
+                   SELECT NULL, Mid, Bid, NULL, Status, 0, "NA", "Not Returned"
+                   FROM BorrowRequests');
+        $db->exec('DROP TABLE BorrowRequests');
+    }
 
     $userRid = $ensureRole($db, 'User');
     $adminRid = $ensureRole($db, 'Admin');

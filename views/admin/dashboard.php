@@ -12,6 +12,8 @@
 
 <div class="list-group mb-4">
     <a href="index.php?c=admin&a=manageUsers" class="list-group-item list-group-item-action">Manage Users</a>
+    <a href="index.php?c=admin&a=manageRequests" class="list-group-item list-group-item-action">Manage Borrow Requests</a>
+    <a href="index.php?c=admin&a=manageReturns" class="list-group-item list-group-item-action">Manage Return Requests</a>
     <a href="index.php?c=admin&a=addBook" class="list-group-item list-group-item-action">Add New Book</a>
     <a href="index.php?c=admin&a=monitorFines" class="list-group-item list-group-item-action">Monitor Fines</a>
 </div>

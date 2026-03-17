@@ -27,29 +27,19 @@ class MemberController extends Controller
         unset($_SESSION['flash']);
     }
 
-    public function borrow(): void
+    public function requestBook(): void
     {
         Auth::requireRole('User');
         $bid = (int) ($_POST['bid'] ?? 0);
         $mid = (int) (Auth::user()['mid'] ?? 0);
         $quantity = (int) ($_POST['quantity'] ?? 0);
-        $borrowModel = new Borrow();
-        $remaining = $borrowModel->remainingThisMonth($mid);
 
         if ($bid <= 0 || $mid <= 0 || $quantity <= 0) {
-            $_SESSION['flash']['error'] = 'Invalid borrow request.';
-        } elseif (($borrowModel->getActiveBorrowCount($bid, $mid) + $quantity) > 3) {
-            $_SESSION['flash']['error'] = 'You have reached the maximum limit of 3 copies for this book. Please return a copy before borrowing more.';
-        } elseif (!$borrowModel->isAvailable($bid, $quantity)) {
-            $_SESSION['flash']['error'] = 'Requested number of copies is not available.';
-        } elseif ($quantity > $remaining) {
-            $_SESSION['flash']['error'] = $remaining > 0
-                ? 'Monthly limit is 5 copies. You can borrow only ' . $remaining . ' more this month.'
-                : 'Monthly limit reached. You cannot borrow more than 5 copies this month.';
-        } elseif ($borrowModel->borrowBook($bid, $mid, $quantity)) {
-            $_SESSION['flash']['message'] = $quantity . ' cop' . ($quantity > 1 ? 'ies were' : 'y was') . ' borrowed successfully.';
+            $_SESSION['flash']['error'] = 'Invalid request.';
+        } elseif ((new Borrow())->requestBook($bid, $mid, $quantity)) {
+            $_SESSION['flash']['message'] = 'Book request submitted successfully. Waiting for admin approval.';
         } else {
-            $_SESSION['flash']['error'] = 'Requested number of copies is not available.';
+            $_SESSION['flash']['error'] = 'Failed to submit request.';
         }
         $this->redirect('member', 'books');
     }
@@ -65,14 +55,14 @@ class MemberController extends Controller
         Auth::requireRole('User');
         $this->render('member/returns', [
             'title' => 'Return Books',
-            'rows' => (new Borrow())->currentBorrowed((int) Auth::user()['mid']),
+            'rows' => (new Borrow())->currentReturnable((int) Auth::user()['mid']),
             'message' => $_SESSION['flash']['message'] ?? null,
             'error' => $_SESSION['flash']['error'] ?? null,
         ]);
         unset($_SESSION['flash']);
     }
 
-    public function returnBooks(): void
+    public function requestReturn(): void
     {
         Auth::requireRole('User');
         $bid = (int) ($_POST['bid'] ?? 0);
@@ -81,8 +71,8 @@ class MemberController extends Controller
 
         if ($bid <= 0 || $mid <= 0 || $quantity <= 0) {
             $_SESSION['flash']['error'] = 'Invalid return request.';
-        } elseif ((new Borrow())->returnBookCopies($bid, $mid, $quantity)) {
-            $_SESSION['flash']['message'] = $quantity . ' cop' . ($quantity > 1 ? 'ies were' : 'y was') . ' returned successfully.';
+        } elseif ((new Borrow())->requestReturnBookCopies($bid, $mid, $quantity)) {
+            $_SESSION['flash']['message'] = 'Return request submitted successfully. Waiting for admin approval.';
         } else {
             $_SESSION['flash']['error'] = 'Requested number of copies cannot be returned.';
         }
@@ -94,5 +84,14 @@ class MemberController extends Controller
     {
         Auth::requireRole('User');
         $this->render('member/history', ['title' => 'Borrow History', 'rows' => (new Borrow())->history((int) Auth::user()['mid'])]);
+    }
+
+    public function requests(): void
+    {
+        Auth::requireRole('User');
+        $this->render('member/requests', [
+            'title' => 'My Requests',
+            'requests' => (new Borrow())->getBorrowRequestsByMember((int) Auth::user()['mid'])
+        ]);
     }
 }

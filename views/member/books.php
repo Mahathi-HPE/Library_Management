@@ -45,19 +45,18 @@
                     <td><?= htmlspecialchars($row['PubDate']) ?></td>
                     <td><?= (int) $row['AvailableCopies'] ?></td>
                     <td>
-                        <form method="post" action="index.php?c=member&a=borrow" class="d-flex gap-2 align-items-center">
+                        <form method="post" action="index.php?c=member&a=requestBook" class="d-flex gap-2 align-items-center">
                             <input type="hidden" name="bid" value="<?= (int) $row['Bid'] ?>">
                             <input
                                 type="number"
                                 name="quantity"
                                 class="form-control form-control-sm"
                                 min="1"
-                                max="<?= (int) $row['AvailableCopies'] ?>"
                                 value="1"
                                 style="width: 90px;"
                                 required
                             >
-                            <button class="btn btn-sm btn-success">Borrow</button>
+                            <button class="btn btn-sm btn-success">Request</button>
                         </form>
                     </td>
                 </tr>

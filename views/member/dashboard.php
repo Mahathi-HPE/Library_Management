@@ -7,5 +7,6 @@
     <a href="index.php?c=member&a=books" class="list-group-item list-group-item-action">All Books</a>
     <a href="index.php?c=member&a=current" class="list-group-item list-group-item-action">Currently Borrowed Books</a>
     <a href="index.php?c=member&a=returns" class="list-group-item list-group-item-action">Return Books</a>
+    <a href="index.php?c=member&a=requests" class="list-group-item list-group-item-action">My Requests</a>
     <a href="index.php?c=member&a=history" class="list-group-item list-group-item-action">History</a>
 </div>

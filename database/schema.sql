@@ -38,14 +38,18 @@ CREATE TABLE IF NOT EXISTS Copies (
 );
 
 CREATE TABLE IF NOT EXISTS Borrows (
+    BorrowId INT AUTO_INCREMENT PRIMARY KEY,
     Cid INT,
     Mid INT,
+    Bid INT NULL,
     Bdate DATE,
+    BorrowStatus ENUM('Pending', 'Approved', 'Rejected') NULL,
     Fine FLOAT DEFAULT 0,
     FineStatus ENUM('Paid', 'Not Paid', 'NA') DEFAULT 'NA',
-    PRIMARY KEY (Cid, Mid),
+    ReturnStatus ENUM('Not Returned', 'Pending', 'Approved') DEFAULT 'Not Returned',
     FOREIGN KEY (Cid) REFERENCES Copies(Cid) ON DELETE CASCADE,
-    FOREIGN KEY (Mid) REFERENCES Members(Mid) ON DELETE CASCADE
+    FOREIGN KEY (Mid) REFERENCES Members(Mid) ON DELETE CASCADE,
+    FOREIGN KEY (Bid) REFERENCES Books(Bid) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Roles (
@@ -98,6 +102,9 @@ INSERT IGNORE INTO Author (Aid, AuthLoc, AuthEmail, AuthName) VALUES
 
 INSERT IGNORE INTO Books (Bid, Title, PubDate, Price) VALUES
     (1, '1984', '1949-06-08', 399.00);
+
+INSERT IGNORE INTO Copies (Bid) VALUES
+    (1), (1), (1);
 
 INSERT IGNORE INTO BookAuthor (Bid, Aid) VALUES
     (1, 1);

@@ -34,7 +34,7 @@
                     <td><?= htmlspecialchars($row['AuthName'] ?? '') ?></td>
                     <td><?= (int) $row['Copies'] ?></td>
                     <td>
-                        <form method="post" action="index.php?c=member&a=returnBooks" class="d-flex gap-2 align-items-center">
+                        <form method="post" action="index.php?c=member&a=requestReturn" class="d-flex gap-2 align-items-center">
                             <input type="hidden" name="bid" value="<?= (int) $row['Bid'] ?>">
                             <input
                                 type="number"
@@ -46,7 +46,7 @@
                                 style="width: 90px;"
                                 required
                             >
-                            <button class="btn btn-sm btn-warning">Return</button>
+                            <button class="btn btn-sm btn-warning">Request Return</button>
                         </form>
                     </td>
                 </tr>

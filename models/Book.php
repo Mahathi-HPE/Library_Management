@@ -15,7 +15,6 @@ class Book extends Model
              LEFT JOIN Copies c ON c.Bid = b.Bid
              WHERE :search IS NULL OR b.Title LIKE :like OR a.AuthName LIKE :like
              GROUP BY b.Bid, b.Title, b.Price, b.PubDate
-             HAVING AvailableCopies > 0
              ORDER BY b.Title'
         );
         $stmt->execute([':search' => $like, ':like' => $like]);

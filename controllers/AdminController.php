@@ -102,4 +102,73 @@ class AdminController extends Controller
         Auth::requireRole('Admin');
         $this->render('admin/monitor_fines', ['title' => 'Monitor Fines', 'rows' => (new Borrow())->adminFineTable()]);
     }
+
+    public function manageRequests(): void
+    {
+        Auth::requireRole('Admin');
+        $this->render('admin/manage_requests', [
+            'title' => 'Manage Borrow Requests',
+            'requests' => (new Borrow())->getPendingBorrowRequests(),
+            'message' => $_SESSION['flash']['message'] ?? null,
+            'error' => $_SESSION['flash']['error'] ?? null,
+        ]);
+        unset($_SESSION['flash']);
+    }
+
+    public function approveRequest(): void
+    {
+        Auth::requireRole('Admin');
+        $borrowId = (int) ($_POST['borrow_id'] ?? 0);
+
+        if ($borrowId <= 0) {
+            $_SESSION['flash']['error'] = 'Invalid request.';
+        } elseif ((new Borrow())->approveBorrowRequest($borrowId)) {
+            $_SESSION['flash']['message'] = 'Request approved successfully.';
+        } else {
+            $_SESSION['flash']['error'] = 'Failed to approve request. Check availability.';
+        }
+        $this->redirect('admin', 'manageRequests');
+    }
+
+    public function rejectRequest(): void
+    {
+        Auth::requireRole('Admin');
+        $borrowId = (int) ($_POST['borrow_id'] ?? 0);
+
+        if ($borrowId <= 0) {
+            $_SESSION['flash']['error'] = 'Invalid request.';
+        } elseif ((new Borrow())->rejectBorrowRequest($borrowId)) {
+            $_SESSION['flash']['message'] = 'Request rejected.';
+        } else {
+            $_SESSION['flash']['error'] = 'Failed to reject request.';
+        }
+        $this->redirect('admin', 'manageRequests');
+    }
+
+    public function manageReturns(): void
+    {
+        Auth::requireRole('Admin');
+        $this->render('admin/manage_returns', [
+            'title' => 'Manage Return Requests',
+            'returns' => (new Borrow())->getPendingReturns(),
+            'message' => $_SESSION['flash']['message'] ?? null,
+            'error' => $_SESSION['flash']['error'] ?? null,
+        ]);
+        unset($_SESSION['flash']);
+    }
+
+    public function approveReturn(): void
+    {
+        Auth::requireRole('Admin');
+        $borrowId = (int) ($_POST['borrow_id'] ?? 0);
+
+        if ($borrowId <= 0) {
+            $_SESSION['flash']['error'] = 'Invalid return.';
+        } elseif ((new Borrow())->approveReturn($borrowId)) {
+            $_SESSION['flash']['message'] = 'Return approved successfully.';
+        } else {
+            $_SESSION['flash']['error'] = 'Failed to approve return.';
+        }
+        $this->redirect('admin', 'manageReturns');
+    }
 }
