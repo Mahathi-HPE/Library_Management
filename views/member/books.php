@@ -1,6 +1,9 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>All Books</h3>
-    <a href="index.php?c=member&a=dashboard" class="btn btn-secondary">Back</a>
+    <div class="text-end">
+        <p class="mb-0"><small class="text-muted">Monthly limit: <strong><?= (int) $borrowedThisMonth ?>/7</strong> | Remaining: <strong><?= (int) $remainingThisMonth ?></strong></small></p>
+        <a href="index.php?c=member&a=dashboard" class="btn btn-secondary">Back</a>
+    </div>
 </div>
 
 <?php if (!empty($message)): ?>
@@ -52,11 +55,13 @@
                                 name="quantity"
                                 class="form-control form-control-sm"
                                 min="1"
+                                max="<?= (int) $row['AvailableCopies'] ?>"
                                 value="1"
                                 style="width: 90px;"
                                 required
+                                <?= (int) $row['AvailableCopies'] <= 0 ? 'disabled' : '' ?>
                             >
-                            <button class="btn btn-sm btn-success">Request</button>
+                            <button class="btn btn-sm btn-success" <?= (int) $row['AvailableCopies'] <= 0 ? 'disabled' : '' ?>>Request</button>
                         </form>
                     </td>
                 </tr>

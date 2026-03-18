@@ -74,6 +74,16 @@ class Borrow extends Model
         return true;
     }
 
+    public function getPendingRequestCountForBook(int $bid, int $mid): int
+    {
+        $stmt = $this->db->prepare(
+            'SELECT COUNT(*) FROM Borrows
+             WHERE Mid = :mid AND Bid = :bid AND Cid IS NULL AND BorrowStatus = "Pending"'
+        );
+        $stmt->execute([':mid' => $mid, ':bid' => $bid]);
+        return (int) $stmt->fetchColumn();
+    }
+
     public function requestBook(int $bid, int $mid, int $quantity = 1): bool
     {
         if ($quantity <= 0) {
@@ -82,6 +92,31 @@ class Borrow extends Model
 
         try {
             $this->db->beginTransaction();
+
+            // Check if at least one copy is available
+            if (!$this->isAvailable($bid, 1)) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            // Get pending request count for this book by this member
+            $pendingRequests = $this->getPendingRequestCountForBook($bid, $mid);
+            
+            // Get available copies
+            $availableCopies = $this->getAvailableCopiesCount($bid);
+            
+            // Check if total requests (pending + new) would exceed available copies
+            if (($pendingRequests + $quantity) > $availableCopies) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            // Check if member would exceed monthly borrow limit
+            if (($this->borrowedThisMonth($mid) + $quantity) > self::MONTHLY_BORROW_LIMIT) {
+                $this->db->rollBack();
+                return false;
+            }
+
             $stmt = $this->db->prepare(
                 'INSERT INTO Borrows (Cid, Mid, Bid, Bdate, Fine, FineStatus, ReturnStatus, BorrowStatus)
                  VALUES (NULL, :mid, :bid, NULL, 0, "NA", "Not Returned", "Pending")'

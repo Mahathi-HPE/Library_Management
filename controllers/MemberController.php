@@ -17,12 +17,17 @@ class MemberController extends Controller
     {
         Auth::requireRole('User');
         $search = trim($_GET['search'] ?? '');
+        $mid = (int) (Auth::user()['mid'] ?? 0);
+        $borrow = new Borrow();
+        
         $this->render('member/books', [
             'title' => 'All Books',
             'books' => (new Book())->availableBooks($search ?: null),
             'search' => $search,
             'message' => $_SESSION['flash']['message'] ?? null,
             'error' => $_SESSION['flash']['error'] ?? null,
+            'remainingThisMonth' => $borrow->remainingThisMonth($mid),
+            'borrowedThisMonth' => $borrow->borrowedThisMonth($mid),
         ]);
         unset($_SESSION['flash']);
     }
@@ -36,10 +41,30 @@ class MemberController extends Controller
 
         if ($bid <= 0 || $mid <= 0 || $quantity <= 0) {
             $_SESSION['flash']['error'] = 'Invalid request.';
-        } elseif ((new Borrow())->requestBook($bid, $mid, $quantity)) {
-            $_SESSION['flash']['message'] = 'Book request submitted successfully. Waiting for admin approval.';
         } else {
-            $_SESSION['flash']['error'] = 'Failed to submit request.';
+            $borrow = new Borrow();
+            
+            // Check availability before attempting request
+            if (!$borrow->isAvailable($bid, 1)) {
+                $_SESSION['flash']['error'] = 'No copies of this book are currently available.';
+            } else {
+                $availableCopies = $borrow->getAvailableCopiesCount($bid);
+                $pendingRequests = $borrow->getPendingRequestCountForBook($bid, $mid);
+                $borrowedThisMonth = $borrow->borrowedThisMonth($mid);
+                $remainingThisMonth = $borrow->remainingThisMonth($mid);
+                
+                if ($quantity > $availableCopies) {
+                    $_SESSION['flash']['error'] = "Only {$availableCopies} copy/copies available. You requested {$quantity}.";
+                } elseif (($pendingRequests + $quantity) > $availableCopies) {
+                    $_SESSION['flash']['error'] = "You have {$pendingRequests} pending request(s). Total would exceed {$availableCopies} available copy/copies.";
+                } elseif ($quantity > $remainingThisMonth) {
+                    $_SESSION['flash']['error'] = "You have borrowed/requested {$borrowedThisMonth} books this month. Only {$remainingThisMonth} more allowed (monthly limit: 7).";
+                } elseif ($borrow->requestBook($bid, $mid, $quantity)) {
+                    $_SESSION['flash']['message'] = 'Book request submitted successfully. Waiting for admin approval.';
+                } else {
+                    $_SESSION['flash']['error'] = 'Failed to submit request.';
+                }
+            }
         }
         $this->redirect('member', 'books');
     }
